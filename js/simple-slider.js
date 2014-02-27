@@ -1,3 +1,5 @@
+var jQuery = require('jquery');
+var $ = jQuery;
 /*
  jQuery Simple Slider
 
@@ -14,8 +16,7 @@ var __slice = [].slice,
   SimpleSlider = (function() {
 
     function SimpleSlider(input, options) {
-      var ratio,
-        _this = this;
+      var _this = this;
       this.input = input;
       this.defaultOptions = {
         animate: true,
@@ -47,23 +48,6 @@ var __slice = [].slice,
         });
       }
       this.dragger = this.createDivElement("dragger");
-      this.slider.css({
-        minHeight: this.dragger.outerHeight(),
-        marginLeft: this.dragger.outerWidth() / 2,
-        marginRight: this.dragger.outerWidth() / 2
-      });
-      this.track.css({
-        marginTop: this.track.outerHeight() / -2
-      });
-      if (this.settings.highlight) {
-        this.highlightTrack.css({
-          marginTop: this.track.outerHeight() / -2
-        });
-      }
-      this.dragger.css({
-        marginTop: this.dragger.outerWidth() / -2,
-        marginLeft: this.dragger.outerWidth() / -2
-      });
       this.track.mousedown(function(e) {
         return _this.trackEvent(e);
       });
@@ -105,14 +89,34 @@ var __slice = [].slice,
         this.value = this.nearestValidValue(this.input.val());
       }
       this.setSliderPositionFromValue(this.value);
-      ratio = this.valueToRatio(this.value);
-      this.input.trigger("slider:ready", {
-        value: this.value,
-        ratio: ratio,
-        position: ratio * this.slider.outerWidth(),
-        el: this.slider
-      });
+
+      var self = this;
+      //give browser a bit of time to render the slider
+      window.setTimeout(function() {
+        self.applyWidthDependantStyles();
+        self.setSliderPositionFromValue(self.value);
+      }, 50);
     }
+
+    SimpleSlider.prototype.applyWidthDependantStyles = function() {
+      this.slider.css({
+        minHeight: this.dragger.outerHeight(),
+        marginLeft: this.dragger.outerWidth() / 2,
+        marginRight: this.dragger.outerWidth() / 2
+      });
+      this.track.css({
+        marginTop: this.track.outerHeight() / -2
+      });
+      if (this.settings.highlight) {
+        this.highlightTrack.css({
+          marginTop: this.track.outerHeight() / -2
+        });
+      }
+      this.dragger.css({
+        marginTop: this.dragger.outerWidth() / -2,
+        marginLeft: this.dragger.outerWidth() / -2
+      });
+    };
 
     SimpleSlider.prototype.createDivElement = function(classname) {
       var item;
@@ -317,7 +321,20 @@ var __slice = [].slice,
           return obj[settingsOrMethod].apply(obj, params);
         } else {
           settings = settingsOrMethod;
-          return $(this).data("slider-object", new SimpleSlider($(this), settings));
+
+          obj = new SimpleSlider($(this), settings);
+          $(this).data("slider-object", obj);
+
+          var ratio = obj.valueToRatio(obj.value);
+
+          $(this).trigger('slider:ready', {
+            value: obj.value,
+            ratio: ratio,
+            position: ratio * obj.slider.outerWidth(),
+            el: obj.slider
+          });
+
+          return $(this);
         }
       });
     }
@@ -360,4 +377,4 @@ var __slice = [].slice,
       return $el.simpleSlider(settings);
     });
   });
-})(this.jQuery || this.Zepto, this);
+})(jQuery, window);
